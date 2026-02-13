@@ -1,4 +1,3 @@
-// src/components/common/PasswordField.tsx
 import { forwardRef, useState, type InputHTMLAttributes } from "react";
 import { Eye, EyeOff } from "lucide-react";
 

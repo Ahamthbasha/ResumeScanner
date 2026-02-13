@@ -68,7 +68,7 @@
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "types": ["node", "express", "multer", "jsonwebtoken", "nodemailer", "pdf-parse"],
+    "types": ["node", "express"],
     "typeRoots": [
       "./node_modules/@types",
       "./src/types"

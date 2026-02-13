@@ -5,10 +5,6 @@ import AdminAuthService from '../../services/adminAuthService';
 export class AdminAuthController {
   constructor(private adminAuthService: AdminAuthService) {}
 
-  /**
-   * Admin Login
-   * POST /api/v1/admin/login
-   */
   login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { email, password } = req.body;

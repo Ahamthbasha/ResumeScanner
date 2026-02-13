@@ -1,4 +1,5 @@
-import { Request } from 'express';
+import 'express';
+import { File } from 'multer';
 
 declare global {
   namespace Express {
@@ -8,11 +9,8 @@ declare global {
         email: string;
         role: string;
       };
-      file?: Express.Multer.File;
-      files?: Express.Multer.File[];
+      file?: File;
+      files?: File[];
     }
   }
 }
-
-// This ensures the file is treated as a module
-export {};

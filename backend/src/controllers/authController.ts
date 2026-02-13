@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-// import  AuthService  from 
 import AppError from '../utils/appError'; 
 import { AuthRequest } from '../middleware/authMiddleware'; 
 import AuthService from '../services/authService';
@@ -7,9 +6,6 @@ import AuthService from '../services/authService';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  /**
-   * STEP 1: Register - Initiate registration
-   */
   register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { name, email, password } = req.body;

@@ -48,9 +48,9 @@ class DIContainer {
     this.jwtService = new JwtService();
     
     this.emailService = new EmailService({
-      user: process.env.EMAIL_USER || '',
-      pass: process.env.EMAIL_PASS || '',
-      fromName: process.env.EMAIL_FROM_NAME || 'Resume Scanner',
+      apiKey: process.env.SENDGRID_API_KEY || '',
+      fromEmail: process.env.SENDER_EMAIL || '',
+      fromName: process.env.SENDER_NAME || 'Resume Scanner',
     });
     
     this.otpService = new OTPService(this.emailService);

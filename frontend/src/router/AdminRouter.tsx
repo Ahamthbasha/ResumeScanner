@@ -10,7 +10,6 @@ import EditJobRole from "../pages/admin/JobRole/EditJobRole";
 const AdminRouter = () => {
   return (
     <Routes>
-      {/* Public Admin Routes */}
       <Route
         path="login"
         element={
@@ -19,8 +18,6 @@ const AdminRouter = () => {
           </AdminSessionRoute>
         }
       />
-
-      {/* Protected Admin Routes */}
       <Route element={<AdminPrivateRoute />}>
         <Route element={<AdminLayout />}>
           <Route path="job-roles" element={<JobRolesList />} />

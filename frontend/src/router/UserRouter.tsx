@@ -13,7 +13,6 @@ import ScanDetail from "../pages/Resume/ScanDetail";
 const UserRouter = () => {
   return (
     <Routes>
-      {/* user layout */}
       <Route element={<UserLayout />}>
         <Route path="/" element={<LandingPage />} />
         <Route

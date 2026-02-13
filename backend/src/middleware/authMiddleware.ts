@@ -1,4 +1,3 @@
-// src/middleware/authMiddleware.ts
 import { Request, Response, NextFunction } from 'express';
 import { JwtService } from '../services/jwtService'
 import User from '../models/userModel'
@@ -12,7 +11,6 @@ export interface AuthRequest extends Request {
   };
 }
 
-// Helper function for consistent cookie options
 const getCookieOptions = (maxAge: number) => ({
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
@@ -21,28 +19,24 @@ const getCookieOptions = (maxAge: number) => ({
 });
 
 export class AuthMiddleware {
-  // Fixed admin ID - must match the one in AdminAuthService
   private readonly ADMIN_ID = '00000000-0000-0000-0000-000000000000';
 
   constructor(private jwtService: JwtService) {}
 
   authenticate = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      // Try both user and admin cookies
+
       const accessToken = req.cookies?.accessToken || req.cookies?.adminAccessToken;
       const refreshToken = req.cookies?.refreshToken || req.cookies?.adminRefreshToken;
 
-      // No tokens at all
       if (!accessToken && !refreshToken) {
         throw new AppError('No authentication tokens provided', 401);
       }
 
-      // Try access token first
       if (accessToken) {
         try {
           const payload = this.jwtService.verifyAccessToken(accessToken);
           
-          // ✅ Check if it's admin - skip database lookup for admin
           if (payload.role === 'admin' && payload.userId === this.ADMIN_ID) {
             req.user = {
               userId: payload.userId,
@@ -51,8 +45,7 @@ export class AuthMiddleware {
             };
             return next();
           }
-          
-          // For regular users, check database
+
           const user = await User.findByPk(payload.userId);
           
           if (!user || !user.isActive) {
@@ -67,27 +60,26 @@ export class AuthMiddleware {
           
           return next();
         } catch (accessTokenError) {
-          // Access token invalid - continue to refresh token
+        
           console.log('Access token invalid, trying refresh token...');
         }
       }
 
-      // Try refresh token
       if (refreshToken) {
         try {
           const refreshPayload = this.jwtService.verifyRefreshToken(refreshToken);
           
-          // ✅ Check if it's admin - skip database lookup for admin
+        
           if (refreshPayload.role === 'admin' && refreshPayload.userId === this.ADMIN_ID) {
-            // Generate new access token
+          
             const newAccessToken = this.jwtService.generateAccessToken({
               userId: refreshPayload.userId,
               email: refreshPayload.email,
               role: refreshPayload.role,
             });
 
-            // ✅ FIX: Set new admin access token cookie with proper sameSite
-            res.cookie('adminAccessToken', newAccessToken, getCookieOptions(15 * 60 * 1000)); // 15 minutes
+            
+            res.cookie('adminAccessToken', newAccessToken, getCookieOptions(15 * 60 * 1000)); 
 
             req.user = {
               userId: refreshPayload.userId,
@@ -98,11 +90,10 @@ export class AuthMiddleware {
             return next();
           }
           
-          // For regular users, check database
           const user = await User.findByPk(refreshPayload.userId);
           
           if (!user || !user.isActive) {
-            // ✅ FIX: Clear cookies with proper options
+           
             const clearOptions = {
               httpOnly: true,
               secure: process.env.NODE_ENV === 'production',
@@ -116,16 +107,14 @@ export class AuthMiddleware {
             throw new AppError('User not found or inactive', 401);
           }
 
-          // Generate new access token
           const newAccessToken = this.jwtService.generateAccessToken({
             userId: user.id,
             email: user.email,
             role: user.role,
           });
 
-          // ✅ FIX: Set new access token cookie with proper sameSite
-          res.cookie('accessToken', newAccessToken, getCookieOptions(15 * 60 * 1000)); // 15 minutes
-
+         
+          res.cookie('accessToken', newAccessToken, getCookieOptions(15 * 60 * 1000));
           req.user = {
             userId: user.id,
             email: user.email,
@@ -134,7 +123,6 @@ export class AuthMiddleware {
 
           return next();
         } catch (refreshTokenError) {
-          // ✅ FIX: Clear cookies with proper options
           const clearOptions = {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
@@ -155,9 +143,6 @@ export class AuthMiddleware {
     }
   };
 
-  /**
-   * Check if user is ADMIN - based on token role
-   */
   isAdmin = (req: AuthRequest, _res: Response, next: NextFunction): void => {
     try {
       if (!req.user) {
@@ -168,7 +153,6 @@ export class AuthMiddleware {
         throw new AppError('Access denied. Admin privileges required.', 403);
       }
 
-      // Optional: Verify it's the system admin
       if (req.user.userId !== this.ADMIN_ID) {
         throw new AppError('Access denied. Invalid admin credentials.', 403);
       }
@@ -179,9 +163,6 @@ export class AuthMiddleware {
     }
   };
 
-  /**
-   * Check if user is REGULAR USER - based on token role
-   */
   isUser = (req: AuthRequest, _res: Response, next: NextFunction): void => {
     try {
       if (!req.user) {

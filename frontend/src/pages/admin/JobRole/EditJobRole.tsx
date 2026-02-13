@@ -1,7 +1,7 @@
 // src/pages/admin/JobRole/EditJobRole.tsx
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback,type ChangeEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Formik, Form, Field } from "formik";
+import { Formik, Form, Field,type FormikHelpers } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
 import { getJobRoleById, updateJobRole } from "../../../api/auth/adminAuth";
@@ -21,41 +21,109 @@ interface EditJobRoleFormValues {
 interface ErrorResponse {
   message?: string;
   success?: boolean;
+  errors?: Array<{ msg: string }>;
 }
+
+// Custom validation to check for empty spaces
+const isValidString = (value: string | undefined): boolean => {
+  return !!value && value.trim().length > 0;
+};
 
 const jobRoleSchema = Yup.object().shape({
   title: Yup.string()
     .required("Title is required")
-    .min(2, "Title must be at least 2 characters")
+    .test(
+      "not-empty-spaces",
+      "Title cannot be empty or contain only spaces",
+      (value) => isValidString(value)
+    )
+    .test(
+      "min-length-trimmed",
+      "Title must be at least 2 characters (excluding spaces)",
+      (value) => (value ? value.trim().length >= 2 : false)
+    )
     .max(100, "Title must be less than 100 characters"),
+  
   description: Yup.string()
-    .required("Description is required"),
+    .required("Description is required")
+    .test(
+      "not-empty-spaces",
+      "Description cannot be empty or contain only spaces",
+      (value) => isValidString(value)
+    ),
+  
   requiredSkills: Yup.string()
     .required("Skills are required")
-    .test("skills", "Enter at least one skill", (value) => {
-      return value ? value.split(",").filter(s => s.trim()).length > 0 : false;
-    }),
-  category: Yup.string(),
-  experienceLevel: Yup.string(),
+    .test(
+      "skills",
+      "Enter at least one valid skill (no empty spaces)",
+      (value) => {
+        if (!value) return false;
+        const skills = value.split(",")
+          .map(s => s.trim())
+          .filter(s => s.length > 0);
+        return skills.length > 0;
+      }
+    )
+    .test(
+      "duplicate-skills",
+      "Duplicate skills are not allowed",
+      (value) => {
+        if (!value) return false;
+        const skills = value.split(",")
+          .map(s => s.trim().toLowerCase())
+          .filter(s => s.length > 0);
+        const uniqueSkills = new Set(skills);
+        return uniqueSkills.size === skills.length;
+      }
+    ),
+  
+  category: Yup.string()
+    .nullable()
+    .test(
+      "not-only-spaces",
+      "Category cannot contain only spaces",
+      (value) => {
+        if (!value) return true; // Allow empty
+        return value.trim().length > 0;
+      }
+    ),
+  
+  experienceLevel: Yup.string()
+    .nullable()
+    .test(
+      "not-only-spaces",
+      "Experience level cannot contain only spaces",
+      (value) => {
+        if (!value) return true; // Allow empty
+        return value.trim().length > 0;
+      }
+    ),
+  
   minExperience: Yup.number()
     .min(0, "Minimum experience must be 0 or more")
     .nullable()
     .transform((value) => (isNaN(value) ? undefined : value)),
+  
   maxExperience: Yup.number()
     .min(0, "Maximum experience must be 0 or more")
     .nullable()
     .transform((value) => (isNaN(value) ? undefined : value))
-    .test("max", "Maximum experience must be greater than minimum", function(value) {
-      const { minExperience } = this.parent;
-      if (minExperience && value) {
-        return value > minExperience;
+    .test(
+      "max", 
+      "Maximum experience must be greater than minimum", 
+      function(value) {
+        const { minExperience } = this.parent;
+        if (minExperience && value) {
+          return value > minExperience;
+        }
+        return true;
       }
-      return true;
-    }),
+    ),
 });
 
 const EditJobRole = () => {
-  const { jobId } = useParams();
+  const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
@@ -70,7 +138,11 @@ const EditJobRole = () => {
   });
 
   const fetchJobRole = useCallback(async () => {
-    if (!jobId) return;
+    if (!jobId) {
+      toast.error("Job ID is missing");
+      navigate("/admin/job-roles");
+      return;
+    }
     
     setIsFetching(true);
     try {
@@ -110,22 +182,59 @@ const EditJobRole = () => {
     fetchJobRole();
   }, [fetchJobRole]);
 
-  const onSubmit = async (values: EditJobRoleFormValues) => {
-    if (!jobId) return;
+  // Type for the blur event handler
+  const handleFieldBlur = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    setFieldValue: (field: string, value: string) => void,
+    fieldName: string
+  ) => {
+    const trimmed = e.target.value.trim();
+    setFieldValue(fieldName, trimmed);
+  };
+
+  const onSubmit = async (
+    values: EditJobRoleFormValues,
+    { setSubmitting }: FormikHelpers<EditJobRoleFormValues>
+  ) => {
+    if (!jobId) {
+      toast.error("Job ID is missing");
+      setSubmitting(false);
+      return;
+    }
     
+    // Validate again before submission
+    const trimmedTitle = values.title.trim();
+    if (trimmedTitle.length < 2) {
+      toast.error("Title must be at least 2 characters (excluding spaces)");
+      setSubmitting(false);
+      return;
+    }
+
     setIsLoading(true);
     try {
+      // Clean and validate skills
       const skillsArray = values.requiredSkills
         .split(",")
         .map((skill: string) => skill.trim())
-        .filter((skill: string) => skill);
+        .filter((skill: string) => skill.length > 0);
+      
+      // Check for duplicates
+      const lowerCaseSkills = skillsArray.map(s => s.toLowerCase());
+      const uniqueSkills = new Set(lowerCaseSkills);
+      
+      if (uniqueSkills.size !== skillsArray.length) {
+        toast.error("Duplicate skills are not allowed");
+        setIsLoading(false);
+        setSubmitting(false);
+        return;
+      }
 
       const payload = {
-        title: values.title,
-        description: values.description,
+        title: trimmedTitle,
+        description: values.description.trim(),
         requiredSkills: skillsArray,
-        category: values.category || undefined,
-        experienceLevel: values.experienceLevel || undefined,
+        category: values.category?.trim() || undefined,
+        experienceLevel: values.experienceLevel?.trim() || undefined,
         minExperience: values.minExperience ? Number(values.minExperience) : undefined,
         maxExperience: values.maxExperience ? Number(values.maxExperience) : undefined,
       };
@@ -141,12 +250,13 @@ const EditJobRole = () => {
     } catch (error) {
       console.error("Update error:", error);
       
-      // ✅ Fix: Properly type the error
       let errorMessage = "Failed to update job role";
       
       const axiosError = error as AxiosError<ErrorResponse>;
       if (axiosError.response?.data?.message) {
         errorMessage = axiosError.response.data.message;
+      } else if (axiosError.response?.data?.errors) {
+        errorMessage = axiosError.response.data.errors[0]?.msg || errorMessage;
       } else if (error instanceof Error) {
         errorMessage = error.message;
       }
@@ -154,6 +264,7 @@ const EditJobRole = () => {
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -178,8 +289,10 @@ const EditJobRole = () => {
           initialValues={initialValues}
           validationSchema={jobRoleSchema}
           onSubmit={onSubmit}
+          validateOnChange={true}
+          validateOnBlur={true}
         >
-          {({ errors, touched, isSubmitting }) => (
+          {({ errors, touched, isSubmitting, values, setFieldValue }) => (
             <Form className="space-y-6">
               {/* Title Field */}
               <div>
@@ -194,9 +307,17 @@ const EditJobRole = () => {
                   }`}
                   placeholder="e.g. Senior Frontend Developer"
                   disabled={isLoading}
+                  onBlur={(e: ChangeEvent<HTMLInputElement>) => 
+                    handleFieldBlur(e, setFieldValue, 'title')
+                  }
                 />
                 {errors.title && touched.title && (
                   <div className="text-red-500 text-sm mt-1">{errors.title}</div>
+                )}
+                {values.title && values.title.trim().length > 0 && values.title.trim().length < 2 && (
+                  <div className="text-yellow-600 text-sm mt-1">
+                    Title should be at least 2 characters (excluding spaces)
+                  </div>
                 )}
               </div>
 
@@ -214,6 +335,9 @@ const EditJobRole = () => {
                   }`}
                   placeholder="Describe the job role responsibilities and requirements..."
                   disabled={isLoading}
+                  onBlur={(e: ChangeEvent<HTMLTextAreaElement>) => 
+                    handleFieldBlur(e, setFieldValue, 'description')
+                  }
                 />
                 {errors.description && touched.description && (
                   <div className="text-red-500 text-sm mt-1">{errors.description}</div>
@@ -237,6 +361,11 @@ const EditJobRole = () => {
                 {errors.requiredSkills && touched.requiredSkills && (
                   <div className="text-red-500 text-sm mt-1">{errors.requiredSkills}</div>
                 )}
+                {values.requiredSkills && (
+                  <div className="text-xs text-gray-500 mt-1">
+                    Skills: {values.requiredSkills.split(',').map(s => s.trim()).filter(s => s).join(', ') || 'None'}
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -253,6 +382,9 @@ const EditJobRole = () => {
                     }`}
                     placeholder="e.g. Development, Design, DevOps"
                     disabled={isLoading}
+                    onBlur={(e: ChangeEvent<HTMLInputElement>) => 
+                      handleFieldBlur(e, setFieldValue, 'category')
+                    }
                   />
                   {errors.category && touched.category && (
                     <div className="text-red-500 text-sm mt-1">{errors.category}</div>
@@ -272,6 +404,9 @@ const EditJobRole = () => {
                     }`}
                     placeholder="e.g. Entry, Mid, Senior"
                     disabled={isLoading}
+                    onBlur={(e: ChangeEvent<HTMLInputElement>) => 
+                      handleFieldBlur(e, setFieldValue, 'experienceLevel')
+                    }
                   />
                   {errors.experienceLevel && touched.experienceLevel && (
                     <div className="text-red-500 text-sm mt-1">{errors.experienceLevel}</div>

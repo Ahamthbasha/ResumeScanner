@@ -4,14 +4,21 @@ import JobRole from '../../models/jobRoleModel';
 import AppError from '../../utils/appError';
 import { AuthRequest } from '../../middleware/authMiddleware';
 import { Op } from 'sequelize';
+import { validationResult } from 'express-validator';
 
 export class AdminJobRoleController {
-  /**
-   * Create new job role
-   * POST /api/v1/admin/jobRoles
-   */
-  async createJobRole(req: AuthRequest, res: Response, next: NextFunction) {
+
+  async createJobRole(req: AuthRequest, res: Response, next: NextFunction): Promise<Response | void> {
     try {
+      // Check validation results
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          errors: errors.array()
+        });
+      }
+
       const { 
         title, 
         description, 
@@ -22,10 +29,28 @@ export class AdminJobRoleController {
         maxExperience 
       } = req.body;
 
+      // Sanitize title and description
+      const sanitizedTitle = title?.trim();
+      const sanitizedDescription = description ? description.trim() : description;
+      
+      // Sanitize skills array
+      const sanitizedSkills = requiredSkills
+        ?.map((skill: string) => skill?.trim())
+        .filter((skill: string) => skill && skill.length > 0) || [];
+
+      // Validate required fields
+      if (!sanitizedTitle || sanitizedTitle.length === 0) {
+        throw new AppError('Job role title is required', 400);
+      }
+
+      if (!sanitizedSkills || sanitizedSkills.length === 0) {
+        throw new AppError('At least one required skill is needed', 400);
+      }
+
       // Check if job role already exists (case insensitive)
       const existingRole = await JobRole.findOne({ 
         where: { 
-          title: { [Op.like]: title } 
+          title: { [Op.iLike]: sanitizedTitle } // Use iLike for case-insensitive search
         } 
       });
       
@@ -34,18 +59,18 @@ export class AdminJobRoleController {
       }
 
       const jobRole = await JobRole.create({
-        title,
-        description,
-        requiredSkills,
-        category,
-        experienceLevel,
+        title: sanitizedTitle,
+        description: sanitizedDescription,
+        requiredSkills: sanitizedSkills,
+        category: category?.trim() || null,
+        experienceLevel: experienceLevel?.trim() || null,
         minExperience,
         maxExperience,
         createdBy: req.user!.userId,
         isActive: true
       });
 
-      res.status(201).json({
+      return res.status(201).json({
         success: true,
         message: 'Job role created successfully',
         data: jobRole
@@ -55,12 +80,17 @@ export class AdminJobRoleController {
     }
   }
 
-  /**
-   * Update job role by jobId
-   * PUT /api/v1/admin/jobRoles/:jobId
-   */
-  async updateJobRole(req: AuthRequest, res: Response, next: NextFunction) {
+  async updateJobRole(req: AuthRequest, res: Response, next: NextFunction): Promise<Response | void> {
     try {
+      // Check validation results
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          errors: errors.array()
+        });
+      }
+
       const { jobId } = req.params;
       const { 
         title, 
@@ -77,11 +107,32 @@ export class AdminJobRoleController {
         throw new AppError('Job role not found', 404);
       }
 
+      // Sanitize inputs
+      const sanitizedTitle = title ? title.trim() : jobRole.title;
+      const sanitizedDescription = description !== undefined ? description?.trim() : jobRole.description;
+      
+      // Sanitize skills if provided
+      let sanitizedSkills = jobRole.requiredSkills;
+      if (requiredSkills) {
+        sanitizedSkills = requiredSkills
+          .map((skill: string) => skill?.trim())
+          .filter((skill: string) => skill && skill.length > 0);
+        
+        if (sanitizedSkills.length === 0) {
+          throw new AppError('At least one valid skill is required', 400);
+        }
+      }
+
+      // Validate title if provided
+      if (title && (!sanitizedTitle || sanitizedTitle.length === 0)) {
+        throw new AppError('Job role title cannot be empty', 400);
+      }
+
       // Check if title already exists on OTHER job roles (case insensitive)
-      if (title && title !== jobRole.title) {
+      if (title && sanitizedTitle && sanitizedTitle !== jobRole.title) {
         const existingRole = await JobRole.findOne({
           where: {
-            title: { [Op.like]: title },
+            title: { [Op.iLike]: sanitizedTitle },
             id: { [Op.ne]: jobId }
           }
         });
@@ -92,18 +143,18 @@ export class AdminJobRoleController {
       }
 
       const updates = {
-        title: title || jobRole.title,
-        description: description !== undefined ? description : jobRole.description,
-        requiredSkills: requiredSkills || jobRole.requiredSkills,
-        category: category !== undefined ? category : jobRole.category,
-        experienceLevel: experienceLevel !== undefined ? experienceLevel : jobRole.experienceLevel,
+        title: sanitizedTitle,
+        description: sanitizedDescription,
+        requiredSkills: sanitizedSkills,
+        category: category !== undefined ? (category?.trim() || null) : jobRole.category,
+        experienceLevel: experienceLevel !== undefined ? (experienceLevel?.trim() || null) : jobRole.experienceLevel,
         minExperience: minExperience !== undefined ? minExperience : jobRole.minExperience,
         maxExperience: maxExperience !== undefined ? maxExperience : jobRole.maxExperience,
       };
 
       await jobRole.update(updates);
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: 'Job role updated successfully',
         data: jobRole
@@ -113,11 +164,7 @@ export class AdminJobRoleController {
     }
   }
 
-  /**
-   * Delete job role (soft delete) by jobId
-   * DELETE /api/v1/admin/jobRoles/:jobId
-   */
-  async deleteJobRole(req: AuthRequest, res: Response, next: NextFunction) {
+  async deleteJobRole(req: AuthRequest, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const { jobId } = req.params;
 
@@ -129,7 +176,7 @@ export class AdminJobRoleController {
       // Soft delete by setting isActive to false
       await jobRole.update({ isActive: false });
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: 'Job role deleted successfully'
       });
@@ -138,11 +185,7 @@ export class AdminJobRoleController {
     }
   }
 
-  /**
-   * Get all job roles with pagination (including inactive) - Admin only
-   * GET /api/v1/admin/jobRoles/all?page=1&limit=10
-   */
-  async getAllJobRolesAdmin(req: AuthRequest, res: Response, next: NextFunction) {
+  async getAllJobRolesAdmin(req: AuthRequest, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
@@ -152,12 +195,13 @@ export class AdminJobRoleController {
       // Build where clause
       let whereClause = {};
       
-      if (search) {
+      if (search && search.trim()) {
+        const sanitizedSearch = search.trim();
         whereClause = {
           [Op.or]: [
-            { title: { [Op.like]: `%${search}%` } },
-            { description: { [Op.like]: `%${search}%` } },
-            { category: { [Op.like]: `%${search}%` } }
+            { title: { [Op.iLike]: `%${sanitizedSearch}%` } },
+            { description: { [Op.iLike]: `%${sanitizedSearch}%` } },
+            { category: { [Op.iLike]: `%${sanitizedSearch}%` } }
           ]
         };
       }
@@ -169,7 +213,7 @@ export class AdminJobRoleController {
         offset
       });
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         data: {
           jobRoles: rows,
@@ -188,11 +232,7 @@ export class AdminJobRoleController {
     }
   }
 
-  /**
-   * Get single job role by jobId
-   * GET /api/v1/admin/jobRoles/:jobId
-   */
-  async getJobRoleById(req: AuthRequest, res: Response, next: NextFunction) {
+  async getJobRoleById(req: AuthRequest, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const { jobId } = req.params;
 
@@ -201,33 +241,8 @@ export class AdminJobRoleController {
         throw new AppError('Job role not found', 404);
       }
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
-        data: jobRole
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  /**
-   * Activate/Deactivate job role by jobId
-   * PATCH /api/v1/admin/jobRoles/:jobId/toggleStatus
-   */
-  async toggleJobRoleStatus(req: AuthRequest, res: Response, next: NextFunction) {
-    try {
-      const { jobId } = req.params;
-
-      const jobRole = await JobRole.findByPk(jobId);
-      if (!jobRole) {
-        throw new AppError('Job role not found', 404);
-      }
-
-      await jobRole.update({ isActive: !jobRole.isActive });
-
-      res.status(200).json({
-        success: true,
-        message: `Job role ${jobRole.isActive ? 'activated' : 'deactivated'} successfully`,
         data: jobRole
       });
     } catch (error) {

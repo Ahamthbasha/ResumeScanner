@@ -1,4 +1,4 @@
-// src/service/axios.ts
+
 import axios, {
   type AxiosInstance,
   type AxiosError,
@@ -10,7 +10,7 @@ import { type NavigateFunction } from "react-router-dom";
 
 export const API: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
-  withCredentials: true, // Automatically sends cookies with every request
+  withCredentials: true, 
   timeout: 10000,
 });
 
@@ -18,14 +18,13 @@ export const configureAxiosInterceptors = (
   dispatch: Dispatch<AnyAction>,
   navigate: NavigateFunction
 ) => {
-  // No request interceptor needed - cookies are sent automatically via withCredentials
 
-  // Response interceptor: handle errors
+
+
   API.interceptors.response.use(
-    (response) => response, // Pass through successful responses
+    (response) => response, 
 
     (error: AxiosError) => {
-      // 401 means authentication failed (both tokens invalid/expired)
       if (error.response?.status === 401) {
         dispatch(clearUserDetails());
         const currentPath = window.location.pathname;
@@ -39,7 +38,6 @@ export const configureAxiosInterceptors = (
         navigate("/login");
       }
 
-      // Server error feedback
       if (error.response?.status === 500) {
         toast.error("Server error. Please try again later.");
       }

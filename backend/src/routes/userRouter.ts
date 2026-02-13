@@ -54,14 +54,12 @@ router.get(
   authController.getCurrentUser.bind(authController)
 );
 
-router.route('/jobRoles')
-  .get(resumeController.getAllJobRoles);
+router.get('/jobRoles',resumeController.getAllJobRoles);
 
 router.route('/upload')
   .post(
     authMiddleware.authenticate.bind(authMiddleware),
     upload.single('resume'),
-    
     resumeController.uploadResume
   );
 

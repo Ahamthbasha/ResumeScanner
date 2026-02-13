@@ -1,4 +1,4 @@
-import {  Response, NextFunction } from 'express';
+import {Request,  Response, NextFunction } from 'express';
 import { ResumeService } from '../services/resumeService';
 import AppError from '../utils/appError';
 import { AuthRequest } from '../middleware/authMiddleware';
@@ -151,7 +151,7 @@ export class ResumeController {
    * Get all job roles for dropdown
    * GET /api/v1/resumes/job-roles
    */
-  getAllJobRoles = async (_req: Request, res: Response, next: NextFunction) => {
+  getAllJobRoles = async (_req:Request, res: Response, next: NextFunction) => {
     try {
       const jobRoles = await this.resumeService.getAllJobRoles();
 

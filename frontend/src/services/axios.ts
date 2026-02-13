@@ -28,6 +28,14 @@ export const configureAxiosInterceptors = (
       // 401 means authentication failed (both tokens invalid/expired)
       if (error.response?.status === 401) {
         dispatch(clearUserDetails());
+        const currentPath = window.location.pathname;
+        const isAdminRoute = currentPath.startsWith('/admin');
+        
+        if (isAdminRoute) {
+          navigate("/admin/login");
+        } else {
+          navigate("/login");
+        }
         navigate("/login");
       }
 

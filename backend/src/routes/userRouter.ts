@@ -48,12 +48,6 @@ router.post(
   authController.logout.bind(authController)
 );
 
-router.get(
-  '/profile',
-  authMiddleware.authenticate.bind(authMiddleware),
-  authController.getCurrentUser.bind(authController)
-);
-
 router.get('/jobRoles',
   authMiddleware.authenticate.bind(authMiddleware),
   resumeController.getAllJobRoles);

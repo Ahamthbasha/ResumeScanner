@@ -12,6 +12,14 @@ export interface AuthRequest extends Request {
   };
 }
 
+// Helper function for consistent cookie options
+const getCookieOptions = (maxAge: number) => ({
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: (process.env.NODE_ENV === 'production' ? 'none' : 'strict') as 'none' | 'strict',
+  maxAge,
+});
+
 export class AuthMiddleware {
   // Fixed admin ID - must match the one in AdminAuthService
   private readonly ADMIN_ID = '00000000-0000-0000-0000-000000000000';
@@ -34,7 +42,7 @@ export class AuthMiddleware {
         try {
           const payload = this.jwtService.verifyAccessToken(accessToken);
           
-          // ✅ FIX: Check if it's admin - skip database lookup for admin
+          // ✅ Check if it's admin - skip database lookup for admin
           if (payload.role === 'admin' && payload.userId === this.ADMIN_ID) {
             req.user = {
               userId: payload.userId,
@@ -69,7 +77,7 @@ export class AuthMiddleware {
         try {
           const refreshPayload = this.jwtService.verifyRefreshToken(refreshToken);
           
-          // ✅ FIX: Check if it's admin - skip database lookup for admin
+          // ✅ Check if it's admin - skip database lookup for admin
           if (refreshPayload.role === 'admin' && refreshPayload.userId === this.ADMIN_ID) {
             // Generate new access token
             const newAccessToken = this.jwtService.generateAccessToken({
@@ -78,13 +86,8 @@ export class AuthMiddleware {
               role: refreshPayload.role,
             });
 
-            // Set new admin access token cookie
-            res.cookie('adminAccessToken', newAccessToken, {
-              httpOnly: true,
-              secure: process.env.NODE_ENV === 'production',
-              sameSite: 'strict',
-              maxAge: 15 * 60 * 1000, // 15 minutes
-            });
+            // ✅ FIX: Set new admin access token cookie with proper sameSite
+            res.cookie('adminAccessToken', newAccessToken, getCookieOptions(15 * 60 * 1000)); // 15 minutes
 
             req.user = {
               userId: refreshPayload.userId,
@@ -99,10 +102,17 @@ export class AuthMiddleware {
           const user = await User.findByPk(refreshPayload.userId);
           
           if (!user || !user.isActive) {
-            res.clearCookie('refreshToken');
-            res.clearCookie('accessToken');
-            res.clearCookie('adminRefreshToken');
-            res.clearCookie('adminAccessToken');
+            // ✅ FIX: Clear cookies with proper options
+            const clearOptions = {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: (process.env.NODE_ENV === 'production' ? 'none' : 'strict') as 'none' | 'strict',
+            };
+            
+            res.clearCookie('refreshToken', clearOptions);
+            res.clearCookie('accessToken', clearOptions);
+            res.clearCookie('adminRefreshToken', clearOptions);
+            res.clearCookie('adminAccessToken', clearOptions);
             throw new AppError('User not found or inactive', 401);
           }
 
@@ -113,13 +123,8 @@ export class AuthMiddleware {
             role: user.role,
           });
 
-          // Set new access token cookie
-          res.cookie('accessToken', newAccessToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 15 * 60 * 1000, // 15 minutes
-          });
+          // ✅ FIX: Set new access token cookie with proper sameSite
+          res.cookie('accessToken', newAccessToken, getCookieOptions(15 * 60 * 1000)); // 15 minutes
 
           req.user = {
             userId: user.id,
@@ -129,10 +134,17 @@ export class AuthMiddleware {
 
           return next();
         } catch (refreshTokenError) {
-          res.clearCookie('refreshToken');
-          res.clearCookie('accessToken');
-          res.clearCookie('adminRefreshToken');
-          res.clearCookie('adminAccessToken');
+          // ✅ FIX: Clear cookies with proper options
+          const clearOptions = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: (process.env.NODE_ENV === 'production' ? 'none' : 'strict') as 'none' | 'strict',
+          };
+          
+          res.clearCookie('refreshToken', clearOptions);
+          res.clearCookie('accessToken', clearOptions);
+          res.clearCookie('adminRefreshToken', clearOptions);
+          res.clearCookie('adminAccessToken', clearOptions);
           throw new AppError('Session expired. Please login again.', 401);
         }
       }

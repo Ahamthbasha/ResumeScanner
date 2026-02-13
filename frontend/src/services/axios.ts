@@ -9,7 +9,7 @@ import { type Dispatch, type AnyAction } from "@reduxjs/toolkit";
 import { type NavigateFunction } from "react-router-dom";
 
 export const API: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000",
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   withCredentials: true, // Automatically sends cookies with every request
   timeout: 10000,
 });

@@ -8,7 +8,6 @@ const router = Router();
 
 const { adminAuthController, adminJobRoleController, authMiddleware } = container;
 
-// ============ ADMIN AUTH ROUTES ============
 router.post(
   '/login',
   adminLoginValidator,
@@ -23,12 +22,6 @@ router.post(
   adminAuthController.logout.bind(adminAuthController)
 );
 
-// ============ JOB ROLE MANAGEMENT ROUTES (camelCase) ============
-
-/**
- * Create new job role
- * POST /api/v1/admin/jobRoles
- */
 router.post(
   '/jobRoles',
   authMiddleware.authenticate.bind(authMiddleware),
@@ -38,10 +31,6 @@ router.post(
   adminJobRoleController.createJobRole.bind(adminJobRoleController)
 );
 
-/**
- * Update job role by jobId
- * PUT /api/v1/admin/jobRoles/:jobId
- */
 router.put(
   '/jobRoles/:jobId',
   authMiddleware.authenticate.bind(authMiddleware),
@@ -51,10 +40,6 @@ router.put(
   adminJobRoleController.updateJobRole.bind(adminJobRoleController)
 );
 
-/**
- * Delete job role (soft delete) by jobId
- * DELETE /api/v1/admin/jobRoles/:jobId
- */
 router.delete(
   '/jobRoles/:jobId',
   authMiddleware.authenticate.bind(authMiddleware),
@@ -62,10 +47,6 @@ router.delete(
   adminJobRoleController.deleteJobRole.bind(adminJobRoleController)
 );
 
-/**
- * Get all job roles (including inactive)
- * GET /api/v1/admin/jobRoles/all
- */
 router.get(
   '/jobRoles/all',
   authMiddleware.authenticate.bind(authMiddleware),
@@ -73,10 +54,6 @@ router.get(
   adminJobRoleController.getAllJobRolesAdmin.bind(adminJobRoleController)
 );
 
-/**
- * Get single job role by jobId
- * GET /api/v1/admin/jobRoles/:jobId
- */
 router.get(
   '/jobRoles/:jobId',
   authMiddleware.authenticate.bind(authMiddleware),
@@ -84,15 +61,6 @@ router.get(
   adminJobRoleController.getJobRoleById.bind(adminJobRoleController)
 );
 
-/**
- * Toggle job role active status by jobId
- * PATCH /api/v1/admin/jobRoles/:jobId/toggleStatus
- */
-router.patch(
-  '/jobRoles/:jobId/toggleStatus',
-  authMiddleware.authenticate.bind(authMiddleware),
-  authMiddleware.isAdmin.bind(authMiddleware),
-  adminJobRoleController.toggleJobRoleStatus.bind(adminJobRoleController)
-);
+
 
 export default router;

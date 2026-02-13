@@ -1,0 +1,18 @@
+import { Request } from 'express';
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        userId: string;
+        email: string;
+        role: string;
+      };
+      file?: Express.Multer.File;
+      files?: Express.Multer.File[];
+    }
+  }
+}
+
+// This ensures the file is treated as a module
+export {};

@@ -188,8 +188,8 @@ export class AdminJobRoleController {
         throw new AppError('Job role not found', 404);
       }
 
-      // Soft delete by setting isActive to false
-      await jobRole.update({ isActive: false });
+      let value = !jobRole.isActive
+      await jobRole.update({ isActive: value });
 
       return res.status(200).json({
         success: true,

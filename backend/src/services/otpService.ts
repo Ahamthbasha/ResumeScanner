@@ -1,7 +1,6 @@
-import  OTP  from  '../models/otpModel'
+import OTP from '../models/otpModel';
 import AppError from '../utils/appError';
-import { EmailService } from './emailService'
-
+import { EmailService } from './emailService';
 
 export class OTPService {
   private emailService: EmailService;
@@ -21,9 +20,16 @@ export class OTPService {
 
       // Generate new OTP
       const otp = this.generateOTP();
+      
+      // Set expiration to 60 seconds from now
+      const expiresAt = new Date(Date.now() + 60 * 1000); // 60 seconds
 
-      // Save OTP to database
-      await OTP.create({ email, otp });
+      // Save OTP to database with expiration
+      await OTP.create({ 
+        email, 
+        otp,
+        expiresAt  // ← Add this required field
+      });
 
       // Send OTP email
       await this.emailService.sendOTPEmail(email, otp);
@@ -46,9 +52,8 @@ export class OTPService {
       throw new AppError('No OTP found. Please request a new one.', 400);
     }
 
-    // Check if OTP is expired (60 seconds)
-    const otpAge = Date.now() - otpRecord.createdAt.getTime();
-    if (otpAge > 60 * 1000) {
+    // Check if OTP is expired using expiresAt field
+    if (new Date() > otpRecord.expiresAt) {
       await OTP.destroy({ where: { email } });
       throw new AppError('OTP expired. Please request a new one.', 400);
     }

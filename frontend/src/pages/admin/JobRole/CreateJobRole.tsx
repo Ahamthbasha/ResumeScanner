@@ -1,6 +1,6 @@
-import { useState,type ChangeEvent } from "react";
+import { useState, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { Formik, Form, Field,type FormikHelpers } from "formik";
+import { Formik, Form, Field, type FormikHelpers } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
 import { createJobRole } from "../../../api/auth/adminAuth";
@@ -77,43 +77,44 @@ const jobRoleSchema = Yup.object().shape({
     ),
   
   category: Yup.string()
-    .nullable()
+    .required("Category is required")
     .test(
-      "not-only-spaces",
-      "Category cannot contain only spaces",
-      (value) => {
-        if (!value) return true; // Allow empty
-        return value.trim().length > 0;
-      }
+      "not-empty-spaces",
+      "Category cannot be empty or contain only spaces",
+      (value) => isValidString(value)
     ),
   
   experienceLevel: Yup.string()
-    .nullable()
+    .required("Experience level is required")
     .test(
-      "not-only-spaces",
-      "Experience level cannot contain only spaces",
-      (value) => {
-        if (!value) return true; // Allow empty
-        return value.trim().length > 0;
-      }
+      "not-empty-spaces",
+      "Experience level cannot be empty or contain only spaces",
+      (value) => isValidString(value)
     ),
   
   minExperience: Yup.number()
+    .required("Minimum experience is required")
+    .typeError("Minimum experience must be a number")
     .min(0, "Minimum experience must be 0 or more")
-    .nullable()
     .transform((value) => (isNaN(value) ? undefined : value)),
   
   maxExperience: Yup.number()
+    .required("Maximum experience is required")
+    .typeError("Maximum experience must be a number")
     .min(0, "Maximum experience must be 0 or more")
-    .nullable()
     .transform((value) => (isNaN(value) ? undefined : value))
     .test(
-      "max", 
-      "Maximum experience must be greater than minimum", 
+      "max-greater-than-min",
+      "Maximum experience must be greater than minimum experience",
       function(value) {
         const { minExperience } = this.parent;
-        if (minExperience && value) {
-          return value > minExperience;
+        
+        // Check if both values exist and are valid numbers
+        const hasMinExperience = minExperience !== undefined && minExperience !== "" && !isNaN(Number(minExperience));
+        const hasMaxExperience = value !== undefined && value !== null && !isNaN(value);
+        
+        if (hasMinExperience && hasMaxExperience) {
+          return Number(value) > Number(minExperience);
         }
         return true;
       }
@@ -169,10 +170,10 @@ const CreateJobRole = () => {
         title: trimmedTitle,
         description: values.description.trim(),
         requiredSkills: skillsArray,
-        category: values.category?.trim() || undefined,
-        experienceLevel: values.experienceLevel?.trim() || undefined,
-        minExperience: values.minExperience ? Number(values.minExperience) : undefined,
-        maxExperience: values.maxExperience ? Number(values.maxExperience) : undefined,
+        category: values.category.trim(),
+        experienceLevel: values.experienceLevel.trim(),
+        minExperience: Number(values.minExperience),
+        maxExperience: Number(values.maxExperience),
       };
 
       const response = await createJobRole(payload);
@@ -190,7 +191,6 @@ const CreateJobRole = () => {
       if (axiosError.response?.data?.message) {
         errorMessage = axiosError.response.data.message;
       } else if (axiosError.response?.data?.errors) {
-        // Handle validation errors from server
         errorMessage = axiosError.response.data.errors[0]?.msg || errorMessage;
       } else if (error instanceof Error) {
         errorMessage = error.message;
@@ -308,7 +308,7 @@ const CreateJobRole = () => {
                 {/* Category Field */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Category
+                    Category *
                   </label>
                   <Field
                     name="category"
@@ -330,7 +330,7 @@ const CreateJobRole = () => {
                 {/* Experience Level Field */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Experience Level
+                    Experience Level *
                   </label>
                   <Field
                     name="experienceLevel"
@@ -354,7 +354,7 @@ const CreateJobRole = () => {
                 {/* Min Experience Field */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Minimum Experience (years)
+                    Minimum Experience (years) *
                   </label>
                   <Field
                     name="minExperience"
@@ -373,7 +373,7 @@ const CreateJobRole = () => {
                 {/* Max Experience Field */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Maximum Experience (years)
+                    Maximum Experience (years) *
                   </label>
                   <Field
                     name="maxExperience"

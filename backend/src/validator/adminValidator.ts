@@ -24,7 +24,6 @@ export const jobRoleValidator = [
     .withMessage('Job role title must be between 2 and 100 characters')
     .trim()
     .custom((value) => {
-      // Check if string contains only spaces or empty after trim
       if (!value || value.trim().length === 0) {
         throw new Error('Job role title cannot be empty or contain only spaces');
       }
@@ -33,7 +32,7 @@ export const jobRoleValidator = [
       }
       return true;
     })
-    .escape(), // Sanitize to prevent XSS
+    .escape(),
   
   body('description')
     .optional()
@@ -52,7 +51,6 @@ export const jobRoleValidator = [
     .notEmpty()
     .withMessage('At least one required skill is needed')
     .custom((skills: string[]) => {
-      // Filter out empty strings and strings with only spaces
       const validSkills = skills.filter(skill => 
         skill && typeof skill === 'string' && skill.trim().length > 0
       );
@@ -61,7 +59,6 @@ export const jobRoleValidator = [
         throw new Error('At least one non-empty skill is required');
       }
       
-      // Check for duplicate skills (case insensitive)
       const lowerCaseSkills = validSkills.map(s => s.toLowerCase().trim());
       const uniqueSkills = new Set(lowerCaseSkills);
       
@@ -115,16 +112,27 @@ export const jobRoleValidator = [
   body('minExperience')
     .optional()
     .isInt({ min: 0 })
-    .withMessage('Minimum experience must be a positive number'),
+    .withMessage('Minimum experience must be a positive number')
+    .custom((value, { req }) => {
+      if (value !== undefined && req.body.maxExperience === undefined) {
+        throw new Error('Maximum experience is required when minimum experience is provided');
+      }
+      return true;
+    }),
   
   body('maxExperience')
     .optional()
     .isInt({ min: 0 })
     .withMessage('Maximum experience must be a positive number')
     .custom((value, { req }) => {
-      if (req.body.minExperience && value < req.body.minExperience) {
+      if (value !== undefined && req.body.minExperience === undefined) {
+        throw new Error('Minimum experience is required when maximum experience is provided');
+      }
+      
+      if (req.body.minExperience !== undefined && value !== undefined && value < req.body.minExperience) {
         throw new Error('Maximum experience must be greater than minimum experience');
       }
+      
       return true;
     }),
 ];

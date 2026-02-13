@@ -1,4 +1,3 @@
-// src/controllers/adminController/adminJobController.ts
 import { Response, NextFunction } from 'express';
 import JobRole from '../../models/jobRoleModel';
 import AppError from '../../utils/appError';
@@ -47,10 +46,18 @@ export class AdminJobRoleController {
         throw new AppError('At least one required skill is needed', 400);
       }
 
-      // Check if job role already exists (case insensitive)
+      // Validate experience fields - both or none
+      const hasMinExperience = minExperience !== undefined && minExperience !== null;
+      const hasMaxExperience = maxExperience !== undefined && maxExperience !== null;
+      
+      if ((hasMinExperience && !hasMaxExperience) || (!hasMinExperience && hasMaxExperience)) {
+        throw new AppError('Both minimum and maximum experience must be provided together', 400);
+      }
+
+      // Check if job role already exists - MySQL with case-insensitive collation
       const existingRole = await JobRole.findOne({ 
         where: { 
-          title: { [Op.iLike]: sanitizedTitle } // Use iLike for case-insensitive search
+          title: sanitizedTitle
         } 
       });
       
@@ -64,8 +71,8 @@ export class AdminJobRoleController {
         requiredSkills: sanitizedSkills,
         category: category?.trim() || null,
         experienceLevel: experienceLevel?.trim() || null,
-        minExperience,
-        maxExperience,
+        minExperience: hasMinExperience ? minExperience : null,
+        maxExperience: hasMaxExperience ? maxExperience : null,
         createdBy: req.user!.userId,
         isActive: true
       });
@@ -128,11 +135,19 @@ export class AdminJobRoleController {
         throw new AppError('Job role title cannot be empty', 400);
       }
 
-      // Check if title already exists on OTHER job roles (case insensitive)
+      // Validate experience fields - both or none
+      const hasMinExperience = minExperience !== undefined && minExperience !== null;
+      const hasMaxExperience = maxExperience !== undefined && maxExperience !== null;
+      
+      if ((hasMinExperience && !hasMaxExperience) || (!hasMinExperience && hasMaxExperience)) {
+        throw new AppError('Both minimum and maximum experience must be provided together', 400);
+      }
+
+      // Check if title already exists on OTHER job roles
       if (title && sanitizedTitle && sanitizedTitle !== jobRole.title) {
         const existingRole = await JobRole.findOne({
           where: {
-            title: { [Op.iLike]: sanitizedTitle },
+            title: sanitizedTitle,
             id: { [Op.ne]: jobId }
           }
         });
@@ -148,8 +163,8 @@ export class AdminJobRoleController {
         requiredSkills: sanitizedSkills,
         category: category !== undefined ? (category?.trim() || null) : jobRole.category,
         experienceLevel: experienceLevel !== undefined ? (experienceLevel?.trim() || null) : jobRole.experienceLevel,
-        minExperience: minExperience !== undefined ? minExperience : jobRole.minExperience,
-        maxExperience: maxExperience !== undefined ? maxExperience : jobRole.maxExperience,
+        minExperience: hasMinExperience ? minExperience : (minExperience === null ? null : jobRole.minExperience),
+        maxExperience: hasMaxExperience ? maxExperience : (maxExperience === null ? null : jobRole.maxExperience),
       };
 
       await jobRole.update(updates);
@@ -199,9 +214,9 @@ export class AdminJobRoleController {
         const sanitizedSearch = search.trim();
         whereClause = {
           [Op.or]: [
-            { title: { [Op.iLike]: `%${sanitizedSearch}%` } },
-            { description: { [Op.iLike]: `%${sanitizedSearch}%` } },
-            { category: { [Op.iLike]: `%${sanitizedSearch}%` } }
+            { title: { [Op.like]: `%${sanitizedSearch}%` } },
+            { description: { [Op.like]: `%${sanitizedSearch}%` } },
+            { category: { [Op.like]: `%${sanitizedSearch}%` } }
           ]
         };
       }

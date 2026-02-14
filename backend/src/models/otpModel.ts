@@ -63,7 +63,6 @@ OTP.init(
   }
 );
 
-// Auto-delete expired OTPs every 5 minutes
 setInterval(async () => {
   try {
     await OTP.destroy({

@@ -8,8 +8,6 @@ const userRouterEndPoints = {
     userVerifyOTP: '/api/user/verifyOtp',
     userResendOTP: '/api/user/resendOtp',
 
-    // resume
-
      jobRoles: '/api/user/jobRoles',
     uploadResume: '/api/user/upload',
     compareResume: '/api/user/compare',

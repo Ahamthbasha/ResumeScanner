@@ -9,13 +9,11 @@ const AdminLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const adminEmail = localStorage.getItem("adminEmail");
-
-  // Check if mobile on mount and window resize
   useEffect(() => {
     const checkMobile = () => {
       const mobile = window.innerWidth < 1024;
       setIsMobile(mobile);
-      setIsSidebarOpen(!mobile); // Sidebar closed by default on mobile, open on desktop
+      setIsSidebarOpen(!mobile);
     };
 
     checkMobile();

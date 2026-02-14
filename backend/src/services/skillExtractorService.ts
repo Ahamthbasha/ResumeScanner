@@ -1,4 +1,4 @@
-// src/services/skillExtractorService.ts
+
 import { skillDatabase, getAllSkillNames, getSkillAliasesMap } from '../utils/skillDatabase';
 
 export interface SkillData {
@@ -9,16 +9,14 @@ export interface SkillData {
 
 export class SkillExtractorService {
   private skillAliasesMap: Map<string, string[]>;
-  // Cache for normalized skill names (lowercase)
   private normalizedSkillNames: Set<string>;
-  private skillNameMap: Map<string, string>; // Maps lowercase -> original case
+  private skillNameMap: Map<string, string>;
 
   constructor() {
     this.skillAliasesMap = getSkillAliasesMap();
     this.normalizedSkillNames = new Set();
     this.skillNameMap = new Map();
     
-    // Pre-populate normalized skill names for case-insensitive matching
     getAllSkillNames().forEach((skill: string) => {
       const skillLower = skill.toLowerCase();
       this.normalizedSkillNames.add(skillLower);
@@ -26,53 +24,40 @@ export class SkillExtractorService {
     });
   }
 
-  /**
-   * Escape special characters for regex
-   */
   private escapeRegExp(text: string): string {
     return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
-  /**
-   * Extract skills from text - CASE INSENSITIVE
-   */
   extractSkills(text: string): string[] {
     const foundSkills = new Set<string>();
     const lowerText = text.toLowerCase();
 
-    // Check each skill (using normalized lowercase for comparison)
     getAllSkillNames().forEach((skill: string) => {
       const skillLower = skill.toLowerCase();
       
-      // Direct match (case insensitive)
       if (lowerText.includes(skillLower)) {
-        foundSkills.add(skill); // Add original case version
+        foundSkills.add(skill);
         return;
       }
 
-      // Check aliases (case insensitive)
       const aliases = this.skillAliasesMap.get(skill) || [];
       for (const alias of aliases) {
         if (lowerText.includes(alias.toLowerCase())) {
-          foundSkills.add(skill); // Add original case version
+          foundSkills.add(skill); 
           break;
         }
       }
 
-      // Check word boundary regex (case insensitive)
       const pattern = new RegExp(`\\b${this.escapeRegExp(skillLower)}\\b`, 'gi');
       if (pattern.test(lowerText)) {
-        foundSkills.add(skill); // Add original case version
+        foundSkills.add(skill);
       }
     });
 
-    // Convert Set to sorted array
+
     return Array.from(foundSkills).sort();
   }
 
-  /**
-   * Extract skills with frequency count - CASE INSENSITIVE
-   */
   extractSkillsWithFrequency(text: string): Array<{ name: string; count: number }> {
     const skillCount = new Map<string, number>();
     const lowerText = text.toLowerCase();
@@ -81,13 +66,11 @@ export class SkillExtractorService {
       const skillLower = skill.toLowerCase();
       let count = 0;
 
-      // Count direct matches (case insensitive)
       const directMatches = lowerText.match(new RegExp(`\\b${this.escapeRegExp(skillLower)}\\b`, 'gi'));
       if (directMatches) {
         count += directMatches.length;
       }
 
-      // Count alias matches (case insensitive)
       const aliases = this.skillAliasesMap.get(skill) || [];
       aliases.forEach((alias: string) => {
         const aliasLower = alias.toLowerCase();
@@ -98,7 +81,7 @@ export class SkillExtractorService {
       });
 
       if (count > 0) {
-        skillCount.set(skill, count); // Store with original case
+        skillCount.set(skill, count);
       }
     });
 
@@ -107,9 +90,6 @@ export class SkillExtractorService {
       .sort((a, b) => b.count - a.count);
   }
 
-  /**
-   * Categorize skills by category
-   */
   categorizeSkills(skills: string[]): Record<string, string[]> {
     const categorized: Record<string, string[]> = {};
 
@@ -126,9 +106,6 @@ export class SkillExtractorService {
     return categorized;
   }
 
-  /**
-   * Compare extracted skills with required skills - CASE INSENSITIVE
-   */
   compareSkills(
     extractedSkills: string[],
     requiredSkills: string[]
@@ -138,21 +115,16 @@ export class SkillExtractorService {
     matchPercentage: number;
     extra: string[];
   } {
-    // Normalize both arrays to lowercase for comparison
     const extractedLower = extractedSkills.map(s => s.toLowerCase());
     const requiredLower = requiredSkills.map(s => s.toLowerCase());
-    
-    // Find matched skills (case insensitive) - ✅ FIXED: removed unused 'skill' parameter
     const matched = requiredSkills.filter((_skill, index) => 
       extractedLower.includes(requiredLower[index])
     );
 
-    // Find missing skills (case insensitive) - ✅ FIXED: removed unused 'skill' parameter
     const missing = requiredSkills.filter((_skill, index) => 
       !extractedLower.includes(requiredLower[index])
     );
 
-    // Find extra skills (case insensitive) - ✅ FIXED: removed unused 'skill' parameter
     const extra = extractedSkills.filter((_skill, index) => 
       !requiredLower.includes(extractedLower[index])
     );
@@ -168,10 +140,6 @@ export class SkillExtractorService {
       extra,
     };
   }
-
-  /**
-   * Generate suggestions for missing skills
-   */
   generateSuggestions(missingSkills: string[]): string[] {
     const suggestions: string[] = [];
 
@@ -180,10 +148,8 @@ export class SkillExtractorService {
       return suggestions;
     }
 
-    // General suggestion
     suggestions.push(`You are missing ${missingSkills.length} key skill(s) for this role.`);
 
-    // Specific suggestions for each missing skill
     missingSkills.forEach((skill: string) => {
       switch (skill) {
         case 'React':
@@ -244,31 +210,24 @@ export class SkillExtractorService {
       }
     });
 
-    // Add resources suggestion
     suggestions.push('Online resources: Coursera, Udemy, freeCodeCamp, YouTube tutorials, and official documentation.');
 
     return suggestions;
   }
   
-  /**
-   * Normalize skill name to database standard
-   */
   normalizeSkillName(skillName: string): string {
     const lowerSkill = skillName.toLowerCase();
     
-    // Check if we have a normalized version
     if (this.skillNameMap.has(lowerSkill)) {
       return this.skillNameMap.get(lowerSkill)!;
     }
     
-    // Check aliases
     for (const [standardSkill, aliases] of this.skillAliasesMap.entries()) {
       if (aliases.some(alias => alias.toLowerCase() === lowerSkill)) {
         return standardSkill;
       }
     }
     
-    // Return original if no match found
     return skillName;
   }
 }

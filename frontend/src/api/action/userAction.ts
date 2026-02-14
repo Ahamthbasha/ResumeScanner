@@ -96,13 +96,11 @@ export interface UserResumesResponse {
 }
 
 
-// Get all job roles for dropdown
 export const getJobRoles = async (): Promise<{ success: boolean; data: JobRole[] }> => {
   const response = await API.get(userRouterEndPoints.jobRoles);
   return response.data;
 };
 
-// Upload resume (PDF only)
 export const uploadResume = async (file: File): Promise<UploadResumeResponse> => {
   const formData = new FormData();
   formData.append('resume', file);
@@ -115,13 +113,11 @@ export const uploadResume = async (file: File): Promise<UploadResumeResponse> =>
   return response.data;
 };
 
-// Compare resume with job role
 export const compareResume = async (data: CompareResumeRequest): Promise<CompareResumeResponse> => {
   const response = await API.post(userRouterEndPoints.compareResume, data);
   return response.data;
 };
 
-// Get user's scan history
 export const getScanHistory = async (page: number = 1, limit: number = 10): Promise<ScanHistoryResponse> => {
   const response = await API.get(userRouterEndPoints.scanHistory, {
     params: { page, limit },
@@ -129,25 +125,21 @@ export const getScanHistory = async (page: number = 1, limit: number = 10): Prom
   return response.data;
 };
 
-// Get single scan detail
 export const getScanDetail = async (scanId: string): Promise<ScanDetailResponse> => {
   const response = await API.get(userRouterEndPoints.scanDetail(scanId));
   return response.data;
 };
 
-// Delete scan history
 export const deleteScanHistory = async (scanId: string): Promise<{ success: boolean; message: string }> => {
   const response = await API.delete(userRouterEndPoints.deleteScan(scanId));
   return response.data;
 };
 
-// Get user's resumes
 export const getUserResumes = async (): Promise<UserResumesResponse> => {
   const response = await API.get(userRouterEndPoints.userResumes);
   return response.data;
 };
 
-// Delete resume
 export const deleteResume = async (resumeId: string): Promise<{ success: boolean; message: string }> => {
   const response = await API.delete(userRouterEndPoints.deleteResume(resumeId));
   return response.data;

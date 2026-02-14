@@ -1,4 +1,4 @@
-// src/components/common/InputField.tsx
+
 import { type InputHTMLAttributes, forwardRef } from "react";
 
 interface InputFieldProps extends InputHTMLAttributes<HTMLInputElement> {

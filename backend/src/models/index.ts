@@ -5,7 +5,6 @@ import ScanHistory from './scanHistoryModel';
 import JobRole from './jobRoleModel';
 import OTP from './otpModel';
 
-// Define associations
 User.hasMany(Resume, { foreignKey: 'userId', as: 'resumes' });
 Resume.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 

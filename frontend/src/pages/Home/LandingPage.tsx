@@ -3,9 +3,8 @@ import { CheckCircle, Zap, ArrowRight, Upload, Briefcase, TrendingUp } from "luc
 import { useSelector } from "react-redux";
 import { type RootState } from "../../redux/store"; 
 const LandingPage = () => {
-  // Get user from Redux store
   const user = useSelector((state: RootState) => state.user);
-  const isLoggedIn = !!user.userId; // Check if user is logged in
+  const isLoggedIn = !!user.userId;
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">

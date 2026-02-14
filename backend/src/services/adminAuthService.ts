@@ -1,4 +1,4 @@
-// src/services/adminAuthService.ts
+
 import AppError from '../utils/appError';
 import { JwtService, ITokenPair } from './jwtService';
 
@@ -21,32 +21,25 @@ export class AdminAuthService {
   private adminEmail: string;
   private adminPassword: string;
   private adminName: string;
-  private adminId: string = '00000000-0000-0000-0000-000000000000'; // Fixed admin ID
+  private adminId: string = '00000000-0000-0000-0000-000000000000'; 
 
   constructor(private jwtService: JwtService) {
-    // Get admin credentials from environment variables
     this.adminEmail = process.env.ADMIN_EMAIL || 'admin@resumescanner.com';
     this.adminPassword = process.env.ADMIN_PASSWORD || 'Admin@123';
     this.adminName = process.env.ADMIN_NAME || 'System Administrator';
   }
 
-  /**
-   * Admin login using credentials from .env
-   */
   async login(data: IAdminLoginDTO): Promise<IAdminAuthResponse> {
-    // Check if email matches
     if (data.email !== this.adminEmail) {
       throw new AppError('Invalid admin credentials', 401);
     }
 
-    // Check if password matches
     const isPasswordValid = data.password === this.adminPassword;
     
     if (!isPasswordValid) {
       throw new AppError('Invalid admin credentials', 401);
     }
 
-    // Generate tokens
     const tokens = this.jwtService.generateTokenPair({
       userId: this.adminId,
       email: this.adminEmail,

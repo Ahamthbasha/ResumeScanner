@@ -1,13 +1,5 @@
-/**
- * Validation Middleware
- * Validates incoming requests
- */
-
 import { Request, Response, NextFunction } from "express";
 
-/**
- * Validate file upload
- */
 export const validateFileMiddleware = (
   req: Request,
   res: Response,
@@ -21,25 +13,17 @@ export const validateFileMiddleware = (
     return;
   }
 
-  // Add additional validation logic here
   next();
 };
 
-/**
- * Validate request body
- */
 export const validateRequestBody = (
   _req: Request,
   _res: Response,
   next: NextFunction,
 ): void => {
-  // Add request body validation logic
   next();
 };
 
-/**
- * Validate ID parameter
- */
 export const validateIdParam = (
   req: Request,
   res: Response,

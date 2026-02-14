@@ -90,11 +90,6 @@ JobRole.init(
     createdBy: {
       type: DataTypes.UUID,
       allowNull: false,
-      // ✅ Removed foreign key constraint
-      // references: {
-      //   model: 'users',
-      //   key: 'id',
-      // },
     },
   },
   {

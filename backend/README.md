@@ -108,10 +108,10 @@ npm start
 
 ### Resume Management
 
-- `POST /api/v1/resumes/upload` - Upload a new resume
-- `GET /api/v1/resumes` - Get all resumes
-- `GET /api/v1/resumes/:id` - Get a specific resume
-- `DELETE /api/v1/resumes/:id` - Delete a resume
+- `POST /api/user/resumes/upload` - Upload a new resume
+- `GET /api/user/resumes` - Get all resumes
+- `GET /api/user/resumes/:id` - Get a specific resume
+- `DELETE /api/user/resumes/:id` - Delete a resume
 
 ## Environment Variables
 
@@ -120,6 +120,8 @@ Copy `.env.example` to `.env` and update the values:
 ```bash
 cp .env.example .env
 ```
+
+
 
 ## TypeScript Features Used
 
@@ -134,7 +136,7 @@ cp .env.example .env
 1. Set up your database (PostgreSQL, MongoDB, etc.)
 2. Update `src/config/database.ts` with your database configuration
 3. Implement actual database models replacing the mock in `ResumeModel.ts`
-4. Add authentication middleware (JWT, OAuth, etc.)
+4. Add authentication middleware (JWT, etc.)
 5. Implement resume parsing logic
 6. Add unit tests and integration tests
 

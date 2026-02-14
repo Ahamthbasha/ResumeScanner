@@ -3,10 +3,8 @@ import path from 'path';
 import fs from 'fs';
 import AppError from '../utils/appError';
 
-// 1. MemoryStorage for processing (buffer access)
 const memoryStorage = multer.memoryStorage();
 
-// 2. DiskStorage for persistence (optional - if you want to save files)
 const diskStorage = multer.diskStorage({
   destination: (_, __, cb) => {
     const uploadDir = process.env.UPLOAD_DIR || 'uploads';
@@ -22,7 +20,6 @@ const diskStorage = multer.diskStorage({
   },
 });
 
-// File filter - only PDF
 const fileFilter = (_: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   if (file.mimetype === 'application/pdf') {
     cb(null, true);
@@ -31,16 +28,14 @@ const fileFilter = (_: any, file: Express.Multer.File, cb: multer.FileFilterCall
   }
 };
 
-// ✅ RECOMMENDED: Use MemoryStorage for your use case
 export const upload = multer({
-  storage: memoryStorage, // Use memoryStorage for buffer access
+  storage: memoryStorage,
   fileFilter,
   limits: {
-    fileSize: parseInt(process.env.MAX_FILE_SIZE || '5242880'), // 5MB
+    fileSize: parseInt(process.env.MAX_FILE_SIZE || '5242880'),
   },
 });
 
-// Optional: If you need to save files permanently
 export const uploadAndSave = multer({
   storage: diskStorage,
   fileFilter,

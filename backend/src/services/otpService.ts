@@ -15,26 +15,21 @@ export class OTPService {
 
   async generateAndSendOTP(email: string): Promise<{ expiresIn: number }> {
     try {
-      // Delete any existing OTPs for this email
       await OTP.destroy({ where: { email } });
 
-      // Generate new OTP
       const otp = this.generateOTP();
       
-      // Set expiration to 60 seconds from now
-      const expiresAt = new Date(Date.now() + 60 * 1000); // 60 seconds
+      const expiresAt = new Date(Date.now() + 60 * 1000); 
 
-      // Save OTP to database with expiration
       await OTP.create({ 
         email, 
         otp,
-        expiresAt  // ← Add this required field
+        expiresAt
       });
 
-      // Send OTP email
       await this.emailService.sendOTPEmail(email, otp);
 
-      return { expiresIn: 60 }; // 60 seconds
+      return { expiresIn: 60 };
     } catch (error) {
       console.error('Failed to generate OTP:', error);
       throw new AppError('Failed to send OTP. Please try again.', 500);
@@ -42,7 +37,6 @@ export class OTPService {
   }
 
   async verifyOTP(email: string, otp: string): Promise<boolean> {
-    // Find the most recent OTP for this email
     const otpRecord = await OTP.findOne({
       where: { email },
       order: [['createdAt', 'DESC']],
@@ -52,28 +46,22 @@ export class OTPService {
       throw new AppError('No OTP found. Please request a new one.', 400);
     }
 
-    // Check if OTP is expired using expiresAt field
     if (new Date() > otpRecord.expiresAt) {
       await OTP.destroy({ where: { email } });
       throw new AppError('OTP expired. Please request a new one.', 400);
     }
 
-    // Verify OTP
     if (otpRecord.otp !== otp) {
       throw new AppError('Invalid OTP. Please try again.', 400);
     }
 
-    // Delete OTP after successful verification
     await OTP.destroy({ where: { email } });
 
     return true;
   }
 
   async resendOTP(email: string): Promise<{ expiresIn: number }> {
-    // Delete existing OTPs
     await OTP.destroy({ where: { email } });
-
-    // Generate and send new OTP
     return this.generateAndSendOTP(email);
   }
 }

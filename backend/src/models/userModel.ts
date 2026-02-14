@@ -37,7 +37,7 @@ User.init(
     email: {
       type: DataTypes.STRING(100),
       allowNull: false,
-      unique: true, // ✅ Keep this, remove any other unique indexes
+      unique: true,
     },
     password: {
       type: DataTypes.STRING(255),

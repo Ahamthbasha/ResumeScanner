@@ -1,4 +1,3 @@
-// src/pages/Resume/ScanDetail.tsx
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -14,7 +13,6 @@ import {
 } from "lucide-react";
 import { getScanDetail } from "../../api/action/userAction";
 
-// ✅ Fix: Update interface to match actual API response
 interface ScanDetailData {
   id: string;
   jobRoleTitle: string;
@@ -45,7 +43,6 @@ const ScanDetail = () => {
     setLoading(true);
     try {
       const response = await getScanDetail(scanId);
-      // ✅ Fix: response.data already matches the structure we need
       setScan(response.data);
     } catch {
       toast.error("Failed to fetch scan details");

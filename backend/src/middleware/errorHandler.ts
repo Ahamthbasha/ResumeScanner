@@ -1,8 +1,3 @@
-/**
- * Error Handling Middleware
- * Central error handling for the application
- */
-
 import { Request, Response, NextFunction } from "express";
 import { IError, IApiResponse } from "../types";
 
@@ -23,9 +18,6 @@ export const errorHandler = (
   } as IApiResponse<null>);
 };
 
-/**
- * 404 Not Found Middleware
- */
 export const notFoundHandler = (_req: Request, res: Response): void => {
   res.status(404).json({
     success: false,

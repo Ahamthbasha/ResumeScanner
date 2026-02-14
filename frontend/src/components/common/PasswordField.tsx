@@ -36,7 +36,7 @@ const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(
               }
               ${className || ''}
             `}
-            {...props} // ✅ This now includes name, value, onChange, etc.
+            {...props}
           />
           <button
             type="button"

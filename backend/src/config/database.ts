@@ -31,18 +31,17 @@ const sequelize = new Sequelize(
 export async function initializeDatabase() {
   try {
     await sequelize.authenticate();
-    console.log('✅ Database connection established successfully');
-    
-    // Sync models - use force: true to drop and recreate tables in development
+    console.log(' Database connection established successfully');
+
     await sequelize.sync({ 
-      force: process.env.NODE_ENV === 'development',  // ← Changed this
+      force: process.env.NODE_ENV === 'development',
       alter: process.env.NODE_ENV !== 'development'
     });
-    console.log('✅ Database models synchronized');
+    console.log('Database models synchronized');
     
     return sequelize;
   } catch (error) {
-    console.error('❌ Database connection failed:', error);
+    console.error('Database connection failed:', error);
     console.log('Check your environment variables:');
     console.log('DB_HOST:', process.env.DB_HOST);
     console.log('DB_PORT:', process.env.DB_PORT);

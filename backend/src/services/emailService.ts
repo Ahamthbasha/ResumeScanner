@@ -1,4 +1,4 @@
-// services/emailService.ts
+
 import sgMail from '@sendgrid/mail';
 import dotenv from 'dotenv';
 import AppError from '../utils/appError';
@@ -19,21 +19,19 @@ export class EmailService {
     this.fromEmail = config.fromEmail;
     this.fromName = config.fromName || 'Resume Scanner';
 
-    // Initialize SendGrid with API key
     sgMail.setApiKey(config.apiKey);
 
-    // Verify configuration (SendGrid doesn't have a direct verify method)
     this.verifyConfiguration();
   }
 
   private verifyConfiguration(): void {
     if (!this.fromEmail || !this.fromEmail.includes('@')) {
-      console.error('❌ Invalid fromEmail configuration');
+      console.error(' Invalid fromEmail configuration');
       if (process.env.NODE_ENV === 'production') {
         throw new AppError('Email service configuration failed - invalid from email', 500);
       }
     } else {
-      console.log('✅ Email service configured successfully with SendGrid');
+      console.log('Email service configured successfully with SendGrid');
     }
   }
 
@@ -51,18 +49,16 @@ export class EmailService {
       };
 
       await sgMail.send(msg);
-      console.log(`✅ OTP email sent to ${email}`);
+      console.log(`OTP email sent to ${email}`);
     } catch (error: any) {
-      console.error('❌ Failed to send OTP email:', error.response?.body || error.message);
+      console.error('Failed to send OTP email:', error.response?.body || error.message);
       
       // In development, still show OTP in console
       if (process.env.NODE_ENV !== 'production') {
         console.log(`=================================`);
-        console.log(`🔐 [DEV] OTP for ${email}: ${otp}`);
+        console.log(`[DEV] OTP for ${email}: ${otp}`);
         console.log(`=================================`);
       } else {
-        // In production, don't throw to prevent app crash
-        // Just log the error and let the request continue
         console.error('Email sending failed in production, but continuing...');
       }
     }
@@ -84,9 +80,9 @@ export class EmailService {
       };
 
       await sgMail.send(msg);
-      console.log(`✅ Welcome email sent to ${email}`);
+      console.log(` Welcome email sent to ${email}`);
     } catch (error: any) {
-      console.error('❌ Failed to send welcome email:', error.response?.body || error.message);
+      console.error(' Failed to send welcome email:', error.response?.body || error.message);
     }
   }
 

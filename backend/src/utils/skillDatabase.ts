@@ -1,5 +1,3 @@
-// src/utils/skillDatabase.ts
-
 export interface SkillData {
   name: string;
   category: string;
@@ -7,7 +5,7 @@ export interface SkillData {
 }
 
 export const skillDatabase: SkillData[] = [
-  // Frontend
+
   { name: 'HTML', category: 'Frontend', aliases: ['html5'] },
   { name: 'CSS', category: 'Frontend', aliases: ['css3'] },
   { name: 'JavaScript', category: 'Frontend', aliases: ['js', 'ecmascript', 'es6', 'es8', 'es2020'] },
@@ -25,7 +23,6 @@ export const skillDatabase: SkillData[] = [
   { name: 'Webpack', category: 'Frontend', aliases: ['webpack'] },
   { name: 'Vite', category: 'Frontend', aliases: ['vitejs'] },
   
-  // Backend
   { name: 'Node.js', category: 'Backend', aliases: ['node', 'nodejs'] },
   { name: 'Express', category: 'Backend', aliases: ['expressjs', 'express.js'] },
   { name: 'Python', category: 'Backend', aliases: ['py'] },
@@ -42,7 +39,6 @@ export const skillDatabase: SkillData[] = [
   { name: 'Ruby', category: 'Backend', aliases: ['ruby'] },
   { name: 'Rails', category: 'Backend', aliases: ['ruby on rails'] },
   
-  // Database
   { name: 'SQL', category: 'Database', aliases: ['structured query language'] },
   { name: 'MySQL', category: 'Database', aliases: ['mysql'] },
   { name: 'PostgreSQL', category: 'Database', aliases: ['postgres', 'postgresql'] },
@@ -54,7 +50,6 @@ export const skillDatabase: SkillData[] = [
   { name: 'Firebase', category: 'Database', aliases: ['firebase'] },
   { name: 'DynamoDB', category: 'Database', aliases: ['dynamodb'] },
   
-  // DevOps & Cloud
   { name: 'Docker', category: 'DevOps', aliases: ['docker'] },
   { name: 'Kubernetes', category: 'DevOps', aliases: ['k8s', 'kubernetes'] },
   { name: 'AWS', category: 'Cloud', aliases: ['amazon web services', 'ec2', 's3', 'lambda'] },
@@ -67,7 +62,6 @@ export const skillDatabase: SkillData[] = [
   { name: 'Terraform', category: 'DevOps', aliases: ['terraform'] },
   { name: 'Ansible', category: 'DevOps', aliases: ['ansible'] },
   
-  // Testing
   { name: 'Jest', category: 'Testing', aliases: ['jest'] },
   { name: 'Mocha', category: 'Testing', aliases: ['mocha'] },
   { name: 'Chai', category: 'Testing', aliases: ['chai'] },
@@ -75,8 +69,7 @@ export const skillDatabase: SkillData[] = [
   { name: 'Selenium', category: 'Testing', aliases: ['selenium'] },
   { name: 'JUnit', category: 'Testing', aliases: ['junit'] },
   { name: 'PyTest', category: 'Testing', aliases: ['pytest'] },
-  
-  // Mobile
+
   { name: 'React Native', category: 'Mobile', aliases: ['react native'] },
   { name: 'Flutter', category: 'Mobile', aliases: ['flutter'] },
   { name: 'Swift', category: 'Mobile', aliases: ['swift'] },
@@ -84,13 +77,11 @@ export const skillDatabase: SkillData[] = [
   { name: 'iOS', category: 'Mobile', aliases: ['ios'] },
   { name: 'Android', category: 'Mobile', aliases: ['android'] },
   
-  // Version Control
   { name: 'Git', category: 'Version Control', aliases: ['git'] },
   { name: 'GitHub', category: 'Version Control', aliases: ['github'] },
   { name: 'GitLab', category: 'Version Control', aliases: ['gitlab'] },
   { name: 'Bitbucket', category: 'Version Control', aliases: ['bitbucket'] },
   
-  // Soft Skills
   { name: 'Communication', category: 'Soft Skills', aliases: ['comm'] },
   { name: 'Teamwork', category: 'Soft Skills', aliases: ['team'] },
   { name: 'Problem Solving', category: 'Soft Skills', aliases: ['problem solving', 'analytical'] },
@@ -98,12 +89,10 @@ export const skillDatabase: SkillData[] = [
   { name: 'Time Management', category: 'Soft Skills', aliases: ['time management'] },
 ];
 
-// Get all unique skill names
 export const getAllSkillNames = (): string[] => {
   return skillDatabase.map(skill => skill.name);
 };
 
-// Get skill aliases map
 export const getSkillAliasesMap = (): Map<string, string[]> => {
   const map = new Map<string, string[]>();
   skillDatabase.forEach(skill => {
@@ -112,22 +101,19 @@ export const getSkillAliasesMap = (): Map<string, string[]> => {
   return map;
 };
 
-// Normalize skill name (case insensitive)
 export const normalizeSkillName = (input: string): string => {
   const lowerInput = input.toLowerCase();
   
-  // Check direct match
   const directMatch = skillDatabase.find(skill => 
     skill.name.toLowerCase() === lowerInput
   );
   if (directMatch) return directMatch.name;
   
-  // Check aliases
   for (const skill of skillDatabase) {
     if (skill.aliases.some(alias => alias.toLowerCase() === lowerInput)) {
       return skill.name;
     }
   }
   
-  return input; // Return original if no match
+  return input;
 };

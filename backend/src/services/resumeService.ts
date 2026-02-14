@@ -33,11 +33,10 @@ async uploadResume(
     const categorizedSkills = this.skillExtractorService.categorizeSkills(extractedSkills);
     console.log('📊 Categorized skills:', Object.keys(categorizedSkills));
 
-    // Save resume to database
     const resume = await Resume.create({
       userId,
       fileName: parsedData.fileName,
-      filePath: '', // No file path when using memoryStorage
+      filePath: '',
       fileSize: parsedData.fileSize,
       extractedText: parsedData.text,
       extractedSkills,
@@ -45,10 +44,10 @@ async uploadResume(
       pageCount: parsedData.pageCount,
     });
 
-    console.log(`💾 Resume saved to DB with ID: ${resume.id}`);
+    console.log(`Resume saved to DB with ID: ${resume.id}`);
     return resume;
   } catch (error) {
-    console.error('❌ Resume upload error:', error);
+    console.error('Resume upload error:', error);
     throw error;
   }
 }
@@ -67,7 +66,6 @@ async uploadResume(
   }> {
     const startTime = Date.now();
 
-    // Get resume and job role
     const resume = await Resume.findByPk(resumeId);
     if (!resume) {
       throw new AppError('Resume not found', 404);
@@ -78,19 +76,15 @@ async uploadResume(
       throw new AppError('Job role not found', 404);
     }
 
-    // Compare skills
     const comparison = this.skillExtractorService.compareSkills(
       resume.extractedSkills,
       jobRole.requiredSkills
     );
 
-    // Generate suggestions
     const suggestions = this.skillExtractorService.generateSuggestions(comparison.missing);
 
-    // Calculate scan duration
     const scanDuration = Date.now() - startTime;
 
-    // Save scan history
     const scanHistory = await ScanHistory.create({
       userId,
       resumeId,

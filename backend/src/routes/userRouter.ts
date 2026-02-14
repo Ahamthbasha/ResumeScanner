@@ -13,7 +13,6 @@ import { compareValidation } from '../validator/resumeValidator';
 const router = Router();
 const { authController, authMiddleware,resumeController } = container;
 
-// ============ PUBLIC ROUTES ============
 router.post(
   '/register',
   registerValidator,
